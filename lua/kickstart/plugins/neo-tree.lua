@@ -11,15 +11,22 @@ return {
   },
   cmd = 'Neotree',
   keys = {
-    { '\\', ':Neotree reveal<CR>', { desc = 'NeoTree reveal' } },
+    { '<leader>1', ':Neotree reveal<CR>', { desc = 'NeoTree reveal' } },
+    { '<leader>2', ':Neotree document_symbols<CR>', { desc = 'NeoTree symbols' } },
+    { '<leader>3', ':Neotree float git_status<CR>', { desc = 'NeoTree git' } },
   },
   opts = {
     filesystem = {
       window = {
         mappings = {
-          ['\\'] = 'close_window',
+          ['<leader>1'] = 'close_window',
         },
       },
+    },
+    sources = {
+      'filesystem',
+      'document_symbols',
+      'git_status',
     },
   },
 }
