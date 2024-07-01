@@ -20,6 +20,7 @@ return {
       window = {
         mappings = {
           ['<leader>1'] = 'close_window',
+          ['o'] = 'open',
         },
       },
     },
