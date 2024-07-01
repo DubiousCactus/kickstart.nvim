@@ -871,14 +871,24 @@ require('lazy').setup({
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+    -- init = function()
+    --   -- Load the colorscheme here.
+    --   -- Like many other themes, this one has different styles, and you could load
+    --   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+    --   vim.cmd.colorscheme 'tokyonight-night'
+    --
+    --   -- You can configure highlights by doing something like:
+    --   vim.cmd.hi 'Comment gui=none'
+    -- end,
+  },
 
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+  {
+    'bluz71/vim-nightfly-colors',
+    name = 'nightfly',
+    lazy = false,
+    priority = 1000,
+    init = function()
+      vim.cmd.colorscheme 'nightfly'
     end,
   },
 
@@ -998,6 +1008,28 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    config = function()
+      -- require('nvim-treesitter-context').setup {
+      --   enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
+      --   max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+      --   min_window_height = 0, -- Minimum editor window height to enable context. Values <= 0 mean no limit.
+      --   line_numbers = true,
+      --   multiline_threshold = 20, -- Maximum number of lines to show for a single context
+      --   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
+      --   mode = 'cursor', -- Line used to calculate context. Choices: 'cursor', 'topline'
+      --   -- Separator between context and content. Should be a single character string, like '-'.
+      --   -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
+      --   separator = nil,
+      --   zindex = 20, -- The Z-index of the context window
+      --   on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
+      -- }
+      vim.keymap.set('n', '[c', function()
+        require('treesitter-context').go_to_context(vim.v.count1)
+      end, { silent = true })
+    end,
+  },
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1013,6 +1045,7 @@ require('lazy').setup({
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  --
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
