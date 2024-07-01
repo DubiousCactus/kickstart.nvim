@@ -648,12 +648,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -687,6 +687,8 @@ require('lazy').setup({
       },
       -- 'micangl/cmp-vimtex',
       'amarakon/nvim-cmp-fonts',
+
+      'kdheepak/cmp-latex-symbols',
       -- {
       --   'amarakon/nvim-cmp-fonts',
       --   opts = {
@@ -841,18 +843,20 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
-          { name = 'buffer' },
         },
       }
+      cmp.setup.filetype('tex', {
+        sources = {
 
-      -- cmp.setup.filetype('tex', {
-      --   sources = {
-      --
-      --     { name = 'vimtex' },
-      --     { name = 'path' },
-      --     { name = 'buffer' },
-      --   },
-      -- })
+          -- { name = 'vimtex' },
+          { name = 'luasnip' },
+          { name = 'path' },
+          { name = 'copilot' },
+          { name = 'nvim_lsp' },
+          { name = 'buffer' },
+          { name = 'latex_symbols' },
+        },
+      })
       -- This is for vimtex:
       -- vim.keymap.set('i', '<C-s>', function()
       --   require('cmp_vimtex.search').perform_search { engine = 'semantic_scholar' }
