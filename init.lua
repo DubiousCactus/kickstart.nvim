@@ -121,7 +121,7 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagn
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
--- vim.keymap.set('n', 'ww', vim.cmd.w, { desc = 'Write to file' })
+vim.keymap.set('n', '<leader>w', vim.cmd.w, { desc = 'Write to file' })
 vim.keymap.set('n', '<leader>ev', function()
   vim.cmd.tabedit(vim.env.MYVIMRC)
 end, { desc = 'Edit the Neovim init.lua file' })
@@ -848,8 +848,7 @@ require('lazy').setup({
     'startup-nvim/startup.nvim',
     requires = { 'nvim-telescope/telescope.nvim', 'nvim-lua/plenary.nvim' },
     config = function()
-            require('startup').setup({theme = "startify"})
-
+      require('startup').setup { theme = 'startify' }
     end,
   },
 
