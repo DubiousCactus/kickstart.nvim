@@ -261,7 +261,6 @@ require('lazy').setup({
   -- you do for a plugin at the top level, you can do for a dependency.
   --
   -- Use the `dependencies` key to specify the dependencies of a particular plugin
-
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
@@ -335,7 +334,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = '[S]earch [F]iles' })
-      -- vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>sb', builtin.builtin, { desc = '[S]earch Telescope [B]uiltins' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
@@ -532,6 +531,7 @@ require('lazy').setup({
         pyright = {},
         ruff_lsp = {},
         zls = {},
+        ltex = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -658,11 +658,34 @@ require('lazy').setup({
       },
       'saadparwaiz1/cmp_luasnip',
 
+      'onsails/lspkind.nvim',
       -- Adds other completion capabilities.
       --  nvim-cmp does not ship with all sources by default. They are split
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'hrsh7th/cmp-buffer',
+      {
+        'barreiroleo/ltex_extra.nvim',
+        ft = { 'markdown', 'tex' },
+        dependencies = { 'neovim/nvim-lspconfig' },
+        -- yes, you can use the opts field, just I'm showing the setup explicitly
+        -- config = function()
+        --     require("ltex_extra").setup {
+        --         -- your_ltex_extra_opts,
+        --         server_opts = {
+        --             -- capabilities = your_capabilities,
+        --             on_attach = function(client, bufnr)
+        --                 -- your on_attach process
+        --             end,
+        --             settings = {
+        --                 ltex = { your settings }
+        --             }
+        --         },
+        --     }
+        -- end
+      },
+      -- 'micangl/cmp-vimtex',
       'amarakon/nvim-cmp-fonts',
       -- {
       --   'amarakon/nvim-cmp-fonts',
@@ -678,19 +701,78 @@ require('lazy').setup({
       --     },
       --   },
       -- },
+      --
+      {
+        'zbirenbaum/copilot-cmp',
+        dependencies = {
+          {
+            'zbirenbaum/copilot.lua',
+            cmd = 'Copilot',
+            event = 'InsertEnter',
+            config = function()
+              require('copilot').setup {
+                suggestion = { enabled = false },
+                panel = { enabled = false },
+              }
+            end,
+          },
+        },
+        config = function()
+          require('copilot_cmp').setup()
+        end,
+      },
     },
 
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
+      local lspkind = require 'lspkind'
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
 
+      --[[
+      Tab Completion Configuration (Highly Recommended)
+      Unlike other completion sources, copilot can use other lines above or below an empty line to provide a completion. This can cause problematic for individuals that select menu entries with <TAB>. This behavior is configurable via cmp's config and the following code will make it so that the menu still appears normally, but tab will fallback to indenting unless a non-whitespace character has actually been typed.
+      --]]
+      local has_words_before = function()
+        if vim.api.nvim_buf_get_option(0, 'buftype') == 'prompt' then
+          return false
+        end
+        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+        return col ~= 0 and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match '^%s*$' == nil
+      end
       cmp.setup {
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
           end,
+        },
+        formatting = {
+          format = lspkind.cmp_format {
+            mode = 'symbol',
+            max_width = 50,
+            symbol_map = { Copilot = '' },
+            ellipsis_char = '...', -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
+            show_labelDetails = true, -- show labelDetails in menu. Disabled by default
+          },
+        },
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            require('copilot_cmp.comparators').prioritize,
+
+            -- Below is the default comparitor list and order for nvim-cmp
+            cmp.config.compare.offset,
+            -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.locality,
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
         },
         completion = { completeopt = 'menu,menuone,noinsert' },
 
@@ -703,11 +785,19 @@ require('lazy').setup({
           ['<C-n>'] = cmp.mapping.select_next_item(),
           -- Select the [p]revious item
           ['<C-p>'] = cmp.mapping.select_prev_item(),
-          ['<C-CR>'] = cmp.mapping.confirm { select = true },
+          ['<CR>'] = cmp.mapping.confirm { select = true },
 
           -- Scroll the documentation window [b]ack / [f]orward
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
           ['<C-f>'] = cmp.mapping.scroll_docs(4),
+
+          -- ['<Tab>'] = vim.schedule_wrap(function(fallback)
+          --   if cmp.visible() and has_words_before() then
+          --     cmp.select_next_item { behavior = cmp.SelectBehavior.Select }
+          --   else
+          --     fallback()
+          --   end
+          -- end),
 
           -- Accept ([y]es) the completion.
           --  This will auto-import if your LSP supports it.
@@ -744,13 +834,29 @@ require('lazy').setup({
 
           -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
           --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+          --
         },
         sources = {
+          { name = 'copilot' },
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          { name = 'buffer' },
         },
       }
+
+      -- cmp.setup.filetype('tex', {
+      --   sources = {
+      --
+      --     { name = 'vimtex' },
+      --     { name = 'path' },
+      --     { name = 'buffer' },
+      --   },
+      -- })
+      -- This is for vimtex:
+      -- vim.keymap.set('i', '<C-s>', function()
+      --   require('cmp_vimtex.search').perform_search { engine = 'semantic_scholar' }
+      -- end)
     end,
   },
 
@@ -816,7 +922,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'python' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'python', 'latex' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -849,6 +955,25 @@ require('lazy').setup({
     requires = { 'nvim-telescope/telescope.nvim', 'nvim-lua/plenary.nvim' },
     config = function()
       require('startup').setup { theme = 'startify' }
+    end,
+  },
+
+  {
+    'lervag/vimtex',
+    lazy = false, -- we don't want to lazy load VimTeX
+    -- tag = "v2.15", -- uncomment to pin to a specific release
+    init = function()
+      -- VimTeX configuration goes here, e.g.
+      vim.g.vimtex_view_method = 'sioyek'
+      vim.g.vimtex_quickfix_mode = 1
+      vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
+        pattern = { '*.latex', '*.tex' },
+        group = vim.api.nvim_create_augroup('VimTeX', { clear = true }),
+        callback = function(event)
+          vim.keymap.set('n', '<leader>lv', '<cmd>VimtexView<CR>', { buffer = event.buf, desc = 'Vimtex goto in viewer' })
+          vim.keymap.set('n', '<leader>le', '<cmd>VimtexErrors<CR>', { buffer = event.buf, desc = 'Vimtex diagnostics' })
+        end,
+      })
     end,
   },
 
