@@ -380,6 +380,8 @@ require('lazy').setup({
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
+      'barreiroleo/ltex-extra.nvim', -- For ltex-lsp code actions (addToDictionary and others)
+
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       { 'j-hui/fidget.nvim', opts = {} },
@@ -589,6 +591,12 @@ require('lazy').setup({
           end,
         },
       }
+      require('lspconfig').ltex.setup {
+        capabilities = capabilities,
+        on_attach = function()
+          require('ltex_extra').setup()
+        end,
+      }
     end,
   },
 
@@ -668,27 +676,7 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
       'hrsh7th/cmp-buffer',
-      {
-        'barreiroleo/ltex_extra.nvim',
-        ft = { 'markdown', 'tex' },
-        dependencies = { 'neovim/nvim-lspconfig' },
-        -- yes, you can use the opts field, just I'm showing the setup explicitly
-        -- config = function()
-        --     require("ltex_extra").setup {
-        --         -- your_ltex_extra_opts,
-        --         server_opts = {
-        --             -- capabilities = your_capabilities,
-        --             on_attach = function(client, bufnr)
-        --                 -- your on_attach process
-        --             end,
-        --             settings = {
-        --                 ltex = { your settings }
-        --             }
-        --         },
-        --     }
-        -- end
-      },
-      -- 'micangl/cmp-vimtex',
+      'micangl/cmp-vimtex',
       'amarakon/nvim-cmp-fonts',
 
       'kdheepak/cmp-latex-symbols',
@@ -851,11 +839,11 @@ require('lazy').setup({
       cmp.setup.filetype('tex', {
         sources = {
 
-          -- { name = 'vimtex' },
-          { name = 'luasnip' },
-          { name = 'path' },
-          { name = 'copilot' },
-          { name = 'nvim_lsp' },
+          { name = 'vimtex' },
+          -- { name = 'luasnip' },
+          -- { name = 'path' },
+          -- { name = 'copilot' },
+          -- { name = 'nvim_lsp' },
           { name = 'buffer' },
           { name = 'latex_symbols' },
         },
