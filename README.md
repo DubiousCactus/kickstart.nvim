@@ -1,4 +1,4 @@
-# kickstart.nvim
+# Theo Morales' kickstart.nvim
 
 ## Introduction
 
