@@ -594,8 +594,13 @@ require('lazy').setup({
       require('lspconfig').ltex.setup {
         capabilities = capabilities,
         on_attach = function()
-          require('ltex_extra').setup()
+          require('ltex_extra').setup {}
         end,
+        settings = {
+          ltex = {
+            language = 'en-GB',
+          },
+        },
       }
     end,
   },
@@ -676,7 +681,7 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
       'hrsh7th/cmp-buffer',
-      'micangl/cmp-vimtex',
+      -- 'micangl/cmp-vimtex',
       'amarakon/nvim-cmp-fonts',
 
       'kdheepak/cmp-latex-symbols',
@@ -839,11 +844,11 @@ require('lazy').setup({
       cmp.setup.filetype('tex', {
         sources = {
 
-          { name = 'vimtex' },
-          -- { name = 'luasnip' },
-          -- { name = 'path' },
-          -- { name = 'copilot' },
-          -- { name = 'nvim_lsp' },
+          -- { name = 'vimtex' },
+          { name = 'luasnip' },
+          { name = 'path' },
+          { name = 'copilot' },
+          { name = 'nvim_lsp' },
           { name = 'buffer' },
           { name = 'latex_symbols' },
         },
