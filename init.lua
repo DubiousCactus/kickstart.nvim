@@ -114,7 +114,7 @@ vim.keymap.set('n', '<leader> ', '<cmd>nohlsearch<CR>')
 -- I like redo to be just r:
 vim.keymap.set('n', 'r', vim.cmd.redo, { desc = 'Redo' })
 -- And  escaping to normal mode with jj:
--- vim.keymap.set('n', 'jj', '<esc>')
+vim.keymap.set('i', 'jj', '<esc>')
 --
 vim.keymap.set('n', '<leader>t', vim.cmd.tabnew, { desc = 'Open a new tab' })
 

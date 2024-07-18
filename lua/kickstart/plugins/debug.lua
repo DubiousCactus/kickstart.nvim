@@ -56,6 +56,7 @@ return {
     vim.keymap.set('n', '<leader>dj', dap.step_into, { desc = 'Debug: Step Into' })
     vim.keymap.set('n', '<leader>dl', dap.step_over, { desc = 'Debug: Step Over' })
     vim.keymap.set('n', '<leader>dk', dap.step_out, { desc = 'Debug: Step Out' })
+    vim.keymap.set('n', '<leader>de', dap.terminate, { desc = 'Debug: Terminate' })
     vim.keymap.set('n', '<leader>db', dap.toggle_breakpoint, { desc = 'Debug: Toggle Breakpoint' })
     vim.keymap.set('n', '<leader>dB', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
