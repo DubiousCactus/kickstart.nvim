@@ -1049,6 +1049,12 @@ require('lazy').setup({
     },
     config = true,
   },
+  {
+    '3rd/image.nvim',
+    config = function()
+      -- ...
+    end,
+  },
 
   {
     'ThePrimeagen/harpoon',
