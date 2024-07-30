@@ -43,7 +43,7 @@ vim.g.have_nerd_font = true
 vim.opt.number = true
 vim.opt.relativenumber = true
 
-vim.opt.textwidth = 99
+vim.opt.textwidth = 88
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -93,7 +93,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 5
 
 --------Auto line number switch -----------------
 vim.cmd [[
@@ -692,7 +692,7 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
       'hrsh7th/cmp-buffer',
-      -- 'micangl/cmp-vimtex',
+      'micangl/cmp-vimtex',
       'amarakon/nvim-cmp-fonts',
 
       'kdheepak/cmp-latex-symbols',
@@ -855,7 +855,7 @@ require('lazy').setup({
       cmp.setup.filetype('tex', {
         sources = {
 
-          -- { name = 'vimtex' },
+          { name = 'vimtex' },
           { name = 'luasnip' },
           { name = 'path' },
           { name = 'copilot' },
@@ -900,7 +900,12 @@ require('lazy').setup({
   },
 
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false, keywords = { GOAL = { color = 'hint' } } },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -1136,6 +1141,16 @@ require('lazy').setup({
         },
       }
     end,
+  },
+
+  {
+    'iamcco/markdown-preview.nvim',
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    build = 'cd app && yarn install',
+    init = function()
+      vim.g.mkdp_filetypes = { 'markdown' }
+    end,
+    ft = { 'markdown' },
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
