@@ -14,6 +14,7 @@ return {
     { '<leader>1', ':Neotree reveal<CR>', { desc = 'NeoTree reveal' } },
     { '<leader>2', ':Neotree document_symbols<CR>', { desc = 'NeoTree symbols' } },
     { '<leader>3', ':Neotree float git_status<CR>', { desc = 'NeoTree git' } },
+    { '<leader>=', ':Neotree close<CR>', { desc = 'NeoTree close' } },
   },
   opts = {
     filesystem = {

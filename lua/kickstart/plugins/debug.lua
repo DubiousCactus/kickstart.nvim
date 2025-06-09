@@ -50,6 +50,38 @@ return {
       },
     }
     require('nvim-dap-virtual-text').setup {}
+    require('dap-python').setup 'python3' -- I installed it globally with pacman
+
+    -- local debugpy_path = require('mason-registry').get_package('debugpy'):get_install_path()
+    -- require('dap-python').setup(debugpy_path .. '/venv/bin/python')
+    dap.adapters.python = {
+      type = 'server',
+      host = 'localhost',
+      port = 5678,
+      options = {
+        source_filetype = 'python',
+      },
+    }
+    dap.configurations.python = {
+      {
+        type = 'python',
+        request = 'attach',
+        connect = {
+          host = 'localhost',
+          port = 5678,
+        },
+        mode = 'remote',
+        name = 'Attach to Docker python in /home',
+        redirectOutput = true,
+        justMyCode = true,
+        pathMappings = {
+          {
+            localRoot = vim.fn.getcwd(),
+            remoteRoot = '/home',
+          },
+        },
+      },
+    }
 
     -- Basic debugging keymaps, feel free to change to your liking!
     vim.keymap.set('n', '<leader>dc', dap.continue, { desc = 'Debug: Start/Continue' })
