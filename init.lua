@@ -1134,6 +1134,11 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'stevearc/overseer.nvim',
+    opts = {},
+  },
+
   -- {
   --   'folke/noice.nvim',
   --   event = 'VeryLazy',
@@ -1178,6 +1183,27 @@ require('lazy').setup({
       vim.g.mkdp_filetypes = { 'markdown' }
     end,
     ft = { 'markdown' },
+  },
+
+  {
+    'stevearc/oil.nvim',
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {},
+    -- Optional dependencies
+    dependencies = { { 'nvim-mini/mini.icons', opts = {} } },
+    -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
+    -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
+    lazy = false,
+  },
+
+  {
+    'OscarCreator/rsync.nvim',
+    build = 'make',
+    dependencies = 'nvim-lua/plenary.nvim',
+    config = function()
+      require('rsync').setup()
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
