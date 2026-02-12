@@ -626,17 +626,17 @@ require('lazy').setup({
           end,
         },
       }
-      require('lspconfig').ltex.setup {
-        capabilities = capabilities,
-        on_attach = function()
-          require('ltex_extra').setup {}
-        end,
-        settings = {
-          ltex = {
-            language = 'en-GB',
-          },
-        },
-      }
+      -- require('lspconfig').ltex.setup {
+      --   capabilities = capabilities,
+      --   on_attach = function()
+      --     require('ltex_extra').setup {}
+      --   end,
+      --   settings = {
+      --     ltex = {
+      --       language = 'en-GB',
+      --     },
+      --   },
+      -- }
     end,
   },
 
