@@ -1137,6 +1137,24 @@ require('lazy').setup({
   {
     'stevearc/overseer.nvim',
     opts = {},
+    config = function()
+      local overseer = require 'overseer'
+      overseer:setup()
+      -- require('overseer').setup {
+      --   vim.keymap.set('n', '<leader>ot', function()
+      --     require('overseer').toggle()
+      --   end, { desc = 'Overseer: toggle' }),
+      --   vim.keymap.set('n', '<leader>or', function()
+      --     require('overseer').run()
+      --   end, { desc = 'Overseer: run' }),
+      -- }
+      vim.keymap.set('n', '<leader>ot', function()
+        overseer:toggle()
+      end, { desc = 'Overseer: toggle' })
+      vim.keymap.set('n', '<leader>or', function()
+        overseer:run()
+      end, { desc = 'Overseer: run' })
+    end,
   },
 
   -- {
