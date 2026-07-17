@@ -553,8 +553,8 @@ require('lazy').setup({
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+      -- local capabilities = vim.lsp.protocol.make_client_capabilities()
+      -- capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -612,10 +612,15 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'copilot-language-server', -- Used by copilot-lsp (copilot_ls)
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+        -- Don't auto-enable nvim-lspconfig's `copilot` server for the
+        -- `copilot-language-server` package: copilot-lsp already enables
+        -- its own `copilot_ls` config using the same binary.
+        automatic_enable = { exclude = { 'copilot' } },
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -681,220 +686,99 @@ require('lazy').setup({
     },
   },
 
-  { -- Autocompletion
-    'hrsh7th/nvim-cmp',
-    event = 'InsertEnter',
-    dependencies = {
-      -- Snippet Engine & its associated nvim-cmp source
-      {
-        'L3MON4D3/LuaSnip',
-        build = (function()
-          -- Build Step is needed for regex support in snippets.
-          -- This step is not supported in many windows environments.
-          -- Remove the below condition to re-enable on windows.
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
-            return
-          end
-          return 'make install_jsregexp'
-        end)(),
-        dependencies = {
-          -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          {
-            'rafamadriz/friendly-snippets',
-            config = function()
-              require('luasnip.loaders.from_vscode').lazy_load()
-            end,
-          },
-        },
-      },
-      'saadparwaiz1/cmp_luasnip',
-
-      'onsails/lspkind.nvim',
-      -- Adds other completion capabilities.
-      --  nvim-cmp does not ship with all sources by default. They are split
-      --  into multiple repos for maintenance purposes.
-      'hrsh7th/cmp-nvim-lsp',
-      'hrsh7th/cmp-path',
-      'hrsh7th/cmp-buffer',
-      'micangl/cmp-vimtex',
-      'amarakon/nvim-cmp-fonts',
-
-      'kdheepak/cmp-latex-symbols',
-      -- {
-      --   'amarakon/nvim-cmp-fonts',
-      --   opts = {
-      --     sources = {
-      --       -- Most font names have spaces in them. However, nvim-cmp restarts the
-      --       -- completion after a space, disallowing you to complete a font name
-      --       -- with spaces. The `space_filter` option is a way to get around this by
-      --       -- using a different character to represent spaces. If you wish, you can
-      --       -- set this option to a space character, but you know the downside of
-      --       -- that.
-      --       { name = 'fonts', option = { space_filter = '-' } },
-      --     },
-      --   },
-      -- },
-      --
-      {
-        'zbirenbaum/copilot-cmp',
-        dependencies = {
-          {
-            'zbirenbaum/copilot.lua',
-            cmd = 'Copilot',
-            event = 'InsertEnter',
-            config = function()
-              require('copilot').setup {
-                suggestion = { enabled = false },
-                panel = { enabled = false },
-              }
-            end,
-          },
-        },
-        config = function()
-          require('copilot_cmp').setup()
-        end,
-      },
-    },
-
-    config = function()
-      -- See `:help cmp`
-      local cmp = require 'cmp'
-      local lspkind = require 'lspkind'
-      local luasnip = require 'luasnip'
-      luasnip.config.setup {}
-
-      --[[
-      Tab Completion Configuration (Highly Recommended)
-      Unlike other completion sources, copilot can use other lines above or below an empty line to provide a completion. This can cause problematic for individuals that select menu entries with <TAB>. This behavior is configurable via cmp's config and the following code will make it so that the menu still appears normally, but tab will fallback to indenting unless a non-whitespace character has actually been typed.
-      --]]
-      local has_words_before = function()
-        if vim.api.nvim_buf_get_option(0, 'buftype') == 'prompt' then
-          return false
+  {
+    'copilotlsp-nvim/copilot-lsp',
+    init = function()
+      vim.g.copilot_nes_debounce = 500
+      vim.lsp.enable 'copilot_ls'
+      vim.keymap.set('n', '<tab>', function()
+        local bufnr = vim.api.nvim_get_current_buf()
+        local state = vim.b[bufnr].nes_state
+        if state then
+          -- Try to jump to the start of the suggestion edit.
+          -- If already at the start, then apply the pending suggestion and jump to the end of the edit.
+          local _ = require('copilot-lsp.nes').walk_cursor_start_edit()
+            or (require('copilot-lsp.nes').apply_pending_nes() and require('copilot-lsp.nes').walk_cursor_end_edit())
+          return nil
+        else
+          -- Resolving the terminal's inability to distinguish between `TAB` and `<C-i>` in normal mode
+          return '<C-i>'
         end
-        local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-        return col ~= 0 and vim.api.nvim_buf_get_text(0, line - 1, 0, line - 1, col, {})[1]:match '^%s*$' == nil
-      end
-      cmp.setup {
-        snippet = {
-          expand = function(args)
-            luasnip.lsp_expand(args.body)
-          end,
-        },
-        formatting = {
-          format = lspkind.cmp_format {
-            mode = 'symbol',
-            max_width = 50,
-            symbol_map = { Copilot = '' },
-            ellipsis_char = '...', -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead (must define maxwidth first)
-            show_labelDetails = true, -- show labelDetails in menu. Disabled by default
-          },
-        },
-        sorting = {
-          priority_weight = 2,
-          comparators = {
-            require('copilot_cmp.comparators').prioritize,
-
-            -- Below is the default comparitor list and order for nvim-cmp
-            cmp.config.compare.offset,
-            -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
-            cmp.config.compare.exact,
-            cmp.config.compare.score,
-            cmp.config.compare.recently_used,
-            cmp.config.compare.locality,
-            cmp.config.compare.kind,
-            cmp.config.compare.sort_text,
-            cmp.config.compare.length,
-            cmp.config.compare.order,
-          },
-        },
-        completion = { completeopt = 'menu,menuone,noinsert' },
-
-        -- For an understanding of why these mappings were
-        -- chosen, you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        mapping = cmp.mapping.preset.insert {
-          -- Select the [n]ext item
-          ['<C-n>'] = cmp.mapping.select_next_item(),
-          -- Select the [p]revious item
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
-
-          -- Scroll the documentation window [b]ack / [f]orward
-          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
-
-          -- ['<Tab>'] = vim.schedule_wrap(function(fallback)
-          --   if cmp.visible() and has_words_before() then
-          --     cmp.select_next_item { behavior = cmp.SelectBehavior.Select }
-          --   else
-          --     fallback()
-          --   end
-          -- end),
-
-          -- Accept ([y]es) the completion.
-          --  This will auto-import if your LSP supports it.
-          --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
-          -- ['<CR>'] = cmp.mapping.confirm { select = true },
-
-          -- If you prefer more traditional completion keymaps,
-          -- you can uncomment the following lines
-          -- ['<Tab>'] = cmp.mapping.confirm { select = true },
-
-          -- Manually trigger a completion from nvim-cmp.
-          --  Generally you don't need this, because nvim-cmp will display
-          --  completions whenever it has completion options available.
-          ['<C-Space>'] = cmp.mapping.complete {},
-
-          -- Think of <c-l> as moving to the right of your snippet expansion.
-          --  So if you have a snippet that's like:
-          --  function $name($args)
-          --    $body
-          --  end
-          --
-          -- <c-l> will move you to the right of each of the expansion locations.
-          -- <c-h> is similar, except moving you backwards.
-          ['<C-l>'] = cmp.mapping(function()
-            if luasnip.expand_or_locally_jumpable() then
-              luasnip.expand_or_jump()
-            end
-          end, { 'i', 's' }),
-          ['<C-h>'] = cmp.mapping(function()
-            if luasnip.locally_jumpable(-1) then
-              luasnip.jump(-1)
-            end
-          end, { 'i', 's' }),
-
-          -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-          --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
-          --
-        },
-        sources = {
-          { name = 'copilot' },
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' },
-          { name = 'path' },
-        },
-      }
-      cmp.setup.filetype('tex', {
-        sources = {
-
-          { name = 'vimtex' },
-          { name = 'luasnip' },
-          { name = 'path' },
-          { name = 'copilot' },
-          { name = 'nvim_lsp' },
-          { name = 'buffer' },
-          { name = 'latex_symbols' },
-        },
-      })
-      -- This is for vimtex:
-      -- vim.keymap.set('i', '<C-s>', function()
-      --   require('cmp_vimtex.search').perform_search { engine = 'semantic_scholar' }
-      -- end)
+      end, { desc = 'Accept Copilot NES suggestion', expr = true })
     end,
+  },
+  {
+    'saghen/blink.cmp',
+    dependencies = {
+      'saghen/blink.lib',
+      -- optional: provides snippets for the snippet source
+      'rafamadriz/friendly-snippets',
+      'fang2hou/blink-copilot',
+    },
+    build = function()
+      -- build the fuzzy matcher, optionally add a timeout to `pwait(timeout_ms)`
+      -- you can use `gb` in `:Lazy` to rebuild the plugin as needed
+      require('blink.cmp').build():pwait()
+    end,
+
+    ---@module 'blink.cmp'
+    ---@type blink.cmp.Config
+    opts = {
+      -- 'default' (recommended) for mappings similar to built-in completions (C-y to accept)
+      -- 'super-tab' for mappings similar to vscode (tab to accept)
+      -- 'enter' for enter to accept
+      -- 'none' for no mappings
+      --
+      -- All presets have the following mappings:
+      -- C-space: Open menu or open docs if already open
+      -- C-n/C-p or Up/Down: Select next/previous item
+      -- C-e: Hide menu
+      -- C-k: Toggle signature help (if signature.enabled = true)
+      --
+      -- See :h blink-cmp-config-keymap for defining your own keymap
+      signature = { enabled = true },
+      -- keymap = { preset = 'default' },
+      keymap = { --enabled = true,
+        preset = 'super-tab',
+        ['<Tab>'] = {
+          function(cmp)
+            if vim.b[vim.api.nvim_get_current_buf()].nes_state then
+              cmp.hide()
+              return (require('copilot-lsp.nes').apply_pending_nes() and require('copilot-lsp.nes').walk_cursor_end_edit())
+            end
+            if cmp.snippet_active() then
+              return cmp.accept()
+            else
+              return cmp.select_and_accept()
+            end
+          end,
+          'snippet_forward',
+          'fallback',
+        },
+      },
+
+      -- (Default) Only show the documentation popup when manually triggered
+      completion = { documentation = { auto_show = false } },
+
+      -- (Default) list of enabled providers defined so that you can extend it
+      -- elsewhere in your config, without redefining it, due to `opts_extend`
+      sources = {
+        default = { 'lsp', 'copilot', 'path', 'snippets', 'buffer' },
+        providers = {
+          copilot = {
+            name = 'copilot',
+            module = 'blink-copilot',
+            score_offset = 100,
+            async = true,
+          },
+        },
+      },
+
+      -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance
+      -- You may use a lua implementation instead by using `implementation = "lua"`
+      -- See the fuzzy documentation for more information
+      fuzzy = { implementation = 'rust' },
+    },
   },
 
   { -- You can easily change to a different colorscheme.
