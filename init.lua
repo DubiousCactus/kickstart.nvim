@@ -1220,7 +1220,12 @@ require('lazy').setup({
     build = 'make',
     dependencies = 'nvim-lua/plenary.nvim',
     config = function()
-      require('rsync').setup()
+      require('rsync').setup {
+        -- triggers `RsyncUp` when you save a file.
+        sync_on_save = true,
+        -- the path to the project configuration
+        project_config_path = '.nvim/rsync.toml',
+      }
     end,
   },
 
