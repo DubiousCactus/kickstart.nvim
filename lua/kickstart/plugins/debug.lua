@@ -50,36 +50,65 @@ return {
       },
     }
     require('nvim-dap-virtual-text').setup {}
-    require('dap-python').setup 'python3' -- I installed it globally with pacman
+    -- require('dap.ext.vscode').load_launchjs('.dap/launch.json', {})
+    -- require('dap.ext.vscode').load_launchjs(nil, {})
 
-    -- local debugpy_path = require('mason-registry').get_package('debugpy'):get_install_path()
-    -- require('dap-python').setup(debugpy_path .. '/venv/bin/python')
-    dap.adapters.python = {
-      type = 'server',
-      host = 'localhost',
-      port = 5678,
-      options = {
-        source_filetype = 'python',
+    dap.configurations.zig = {
+      {
+        name = 'Run Program',
+        type = 'codelldb',
+        request = 'launch',
+        program = function()
+          co = coroutine.running()
+          if co then
+            cb = function(item)
+              coroutine.resume(co, item)
+            end
+          end
+          cb = vim.schedule_wrap(cb)
+          vim.ui.select(vim.fn.glob(vim.fn.getcwd() .. '**/zig-out/bin/*', false, true), {
+            prompt = 'Select executable',
+            kind = 'file',
+          }, cb)
+          return coroutine.yield()
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+        justMyCode = true,
+        args = {},
+        -- args = function()
+        --   return splitStr(vim.fn.input 'Args: ')
+        -- end,
       },
     }
+
     dap.configurations.python = {
       {
-        type = 'python',
-        request = 'attach',
-        connect = {
-          host = 'localhost',
-          port = 5678,
-        },
-        mode = 'remote',
-        name = 'Attach to Docker python in /home',
-        redirectOutput = true,
-        justMyCode = true,
-        pathMappings = {
-          {
-            localRoot = vim.fn.getcwd(),
-            remoteRoot = '/home',
-          },
-        },
+        -- The first three options are required by nvim-dap
+        type = 'python', -- the type here established the link to the adapter definition: `dap.adapters.python`
+        request = 'launch',
+        name = 'Launch file',
+
+        -- Options below are for debugpy, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings for supported options
+
+        program = '${file}', -- This configuration will launch the current file if used.
+        pythonPath = function()
+          -- debugpy supports launching an application with a different interpreter then the one used to launch debugpy itself.
+          -- The code below looks for a `venv` or `.venv` folder in the current directly and uses the python within.
+          -- You could adapt this - to for example use the `VIRTUAL_ENV` environment variable.
+          local cwd = vim.fn.getcwd()
+          if vim.fn.executable(cwd .. '/venv/bin/python') == 1 then
+            return cwd .. '/venv/bin/python'
+          elseif vim.fn.executable(cwd .. '/.venv/bin/python') == 1 then
+            return cwd .. '/.venv/bin/python'
+          elseif vim.fn.executable(os.getenv 'VIRTUAL_ENV' .. '/bin/python') == 1 then
+            return os.getenv 'VIRTUAL_ENV' .. '/bin/python'
+          elseif vim.fn.executable(os.getenv 'CONDA_PREFIX}' .. '/bin/python') == 1 then
+            return os.getenv 'CONDA_PREFIX' .. '/bin/python'
+          else
+            return 'python'
+          end
+        end,
       },
     }
 
@@ -93,6 +122,8 @@ return {
     vim.keymap.set('n', '<leader>dB', function()
       dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
     end, { desc = 'Debug: Set Breakpoint' })
+    vim.fn.sign_define('DapBreakpoint', { text = '🟥', texthl = '', linehl = '', numhl = '' })
+    vim.fn.sign_define('DapStopped', { text = '▶️', texthl = '', linehl = '', numhl = '' })
 
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
