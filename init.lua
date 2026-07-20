@@ -963,7 +963,17 @@ require('lazy').setup({
     'folke/todo-comments.nvim',
     event = 'VimEnter',
     dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = { signs = false, keywords = { GOAL = { color = 'hint' } } },
+    opts = {
+      signs = false,
+      keywords = { GOAL = { color = 'hint' } },
+      keys = {
+        {
+          '<leader>to',
+          '<cmd>TodoTrouble<cr>',
+          desc = '[T]o[D]o',
+        },
+      },
+    },
   },
 
   { -- Collection of various small independent plugins/modules
