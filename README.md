@@ -8,7 +8,7 @@ A starting point for Neovim that is:
 * Single-file
 * Completely Documented
 
-**NOT** a Neovim distribution, but instead a starting point for your configuration.
+**DEFINITELY** a Neovim distribution, because Theo Morales made it so.
 
 ## Installation
 
