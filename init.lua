@@ -685,6 +685,33 @@ require('lazy').setup({
     },
   },
 
+  {
+    'stevearc/dressing.nvim',
+    opts = {},
+  },
+
+  {
+    'stevearc/overseer.nvim',
+    keys = {
+
+      {
+        '<leader>tr',
+        '<cmd>OverseerRun<cr>',
+        desc = '[T]asks [R]un',
+      },
+      {
+        '<leader>tt',
+        '<cmd>OverseerToggle<cr>',
+        desc = '[T]asks [T]oggle list',
+      },
+    },
+    config = function()
+      require('overseer').setup {
+        templates = { 'builtin', 'user.zig_build', 'user.zig_run' },
+      }
+    end,
+  },
+
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
